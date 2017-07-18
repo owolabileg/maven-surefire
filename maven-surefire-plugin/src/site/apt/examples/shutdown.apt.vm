@@ -39,8 +39,32 @@ Shutdown of Forked JVM
 
 * Pinging forked JVM
 
+  << Since ${thisPlugin} Plugin 2.20.1 ping is platform dependent and fallbacks to old mechanism if PID of Maven
+  process or platform is not recognized, native commands fail in Java. >>
+
+  Simply the mechanism checks the <<< Maven PID >>> is still alive and it is not reused by OS in another application.
+  If Maven process has died, the forked JVM is killed.
+
+  << Implementation: >> The <<< Maven PID >>> is determined by:
+
+   * resolving the link <<< /proc/self >>> on Linux, or
+
+   * the JMX call <<< ManagementFactory.getRuntimeMXBean().getName() >>>, or
+
+   * Java 9 call <<< ProcessHandle.current().pid() >>>.
+
+   []
+
+   On Unix like systems the process' uptime is determined by native command <<< (/usr)/bin/ps -o etime= -p [PID] >>>.
+
+   On Windows the start time is determined using <<< wmic process where (ProcessId=[PID]) get CreationDate >>>
+   in the forked JVM.
+
+
+  << Since ${thisPlugin} Plugin 2.19 the old mechanism is significantly slower: >>
+
   The master process sends NOOP command to a forked JVM every 10 seconds.
-  Forked JVM is waiting for the command every 20 seconds.
+  Forked JVM is waiting for the command every 30 seconds.
   If the master process is killed (received SIGKILL signal) or shutdown 
   (pressed CTRL+C, received SIGTERM signal), forked JVM is killed after
   timing out waiting period.
