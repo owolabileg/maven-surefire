@@ -19,6 +19,8 @@ package org.apache.maven.surefire.util;
  * under the License.
  */
 
+import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
+import org.apache.maven.plugin.surefire.log.api.NullConsoleLogger;
 import org.apache.maven.plugin.surefire.runorder.RunEntryStatisticsMap;
 import org.apache.maven.surefire.testset.RunOrderParameters;
 
@@ -48,12 +50,15 @@ public class DefaultRunOrderCalculator
 
     private final int threadCount;
 
+    private final ConsoleLogger logger;
+
     public DefaultRunOrderCalculator( RunOrderParameters runOrderParameters, int threadCount )
     {
         this.runOrderParameters = runOrderParameters;
         this.threadCount = threadCount;
         this.runOrder = runOrderParameters.getRunOrder();
         this.sortOrder = this.runOrder.length > 0 ? getSortOrderComparator( this.runOrder[0] ) : null;
+        logger = getConsoleLogger();
     }
 
     @Override
@@ -95,9 +100,7 @@ public class DefaultRunOrderCalculator
         }
         else if ( RunOrder.INPUTFILE.equals( runOrder ) )
         {
-            System.out.println( "test-classes: " + testClasses );
             List<Class<?>> prioritized = readOrderFromFile( testClasses );
-            System.out.println( "prioritized: " + prioritized );
             testClasses.clear();
             testClasses.addAll( prioritized );
         }
@@ -112,7 +115,6 @@ public class DefaultRunOrderCalculator
         List<Class<?>> ordered = new ArrayList<Class<?>>();
         try
         {
-            System.out.println( "runorderfile: " + runOrderParameters.getRunOrderFile() );
             FileReader fileReader = new FileReader( runOrderParameters.getRunOrderFile() );
             BufferedReader bufferedReader = new BufferedReader( fileReader );
             String test = bufferedReader.readLine();
@@ -146,9 +148,12 @@ public class DefaultRunOrderCalculator
         }
         catch ( ClassNotFoundException e )
         {
-            // TODO: use a logger here.
-            System.out.println( "\"" + test + "\" was not found in classpath." );
-            // e.printStackTrace();
+            logger.debug( "\"" + test + "\" was not found in classpath." );
+        }
+        catch ( NoClassDefFoundError e )
+        {
+            // TODO: should we be catching this? seems hacky!!
+            logger.debug( "\"" + test + "\" has dependencies that are not in runtime classpath." );
         }
         return testClass;
     }
@@ -197,5 +202,11 @@ public class DefaultRunOrderCalculator
                 return o1.getName().compareTo( o2.getName() );
             }
         };
+    }
+
+    public ConsoleLogger getConsoleLogger()
+    {
+        // TODO: Use a logger that does not just print to /dev/null
+        return new NullConsoleLogger();
     }
 }
