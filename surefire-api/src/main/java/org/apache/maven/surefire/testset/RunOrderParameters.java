@@ -41,7 +41,7 @@ public class RunOrderParameters
 
     public RunOrderParameters( String runOrder, File runStatisticsFile )
     {
-        this(runOrder, runStatisticsFile, null);
+        this( runOrder, runStatisticsFile, null );
     }
 
     public RunOrderParameters( String runOrder, File runStatisticsFile, File runOrderFile )
