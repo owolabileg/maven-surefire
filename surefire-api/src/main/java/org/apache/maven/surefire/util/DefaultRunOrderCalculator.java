@@ -22,6 +22,9 @@ package org.apache.maven.surefire.util;
 import org.apache.maven.plugin.surefire.runorder.RunEntryStatisticsMap;
 import org.apache.maven.surefire.testset.RunOrderParameters;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -90,11 +93,50 @@ public class DefaultRunOrderCalculator
             testClasses.addAll( prioritized );
 
         }
+        else if ( RunOrder.INPUTFILE.equals( runOrder ) )
+        {
+            System.out.println( "test-classes: " + testClasses );
+            List<Class<?>> prioritized = readOrderFromFile( testClasses );
+            System.out.println( "prioritized: " + prioritized );
+            testClasses.clear();
+            testClasses.addAll( prioritized );
+        }
         else if ( sortOrder != null )
         {
             Collections.sort( testClasses, sortOrder );
         }
     }
+
+    private List<Class<?>> readOrderFromFile( List<Class<?>> testClasses )
+    {
+        List<Class<?>> ordered = new ArrayList<Class<?>>();
+        try
+        {
+            System.out.println( "runorderfile: " + runOrderParameters.getRunOrderFile() );
+            FileReader fileReader = new FileReader( runOrderParameters.getRunOrderFile() );
+            BufferedReader bufferedReader = new BufferedReader( fileReader );
+            String test = bufferedReader.readLine();
+            while ( test != null )
+            {
+                Class<?> testClass = Class.forName(test);
+                if ( testClasses.contains(testClass) )
+                {
+                    ordered.add(testClass);
+                }
+                test = bufferedReader.readLine();
+            }
+        }
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+        }
+        catch ( ClassNotFoundException e )
+        {
+            e.printStackTrace();
+        }
+        return ordered;
+    }
+
 
     private Comparator<Class> getSortOrderComparator( RunOrder runOrder )
     {

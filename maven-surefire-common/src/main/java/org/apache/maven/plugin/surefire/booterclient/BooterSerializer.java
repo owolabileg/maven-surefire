@@ -118,6 +118,7 @@ class BooterSerializer
         if ( runOrderParameters != null )
         {
             properties.setProperty( RUN_ORDER, RunOrder.asString( runOrderParameters.getRunOrder() ) );
+            properties.setProperty( RUN_ORDER_FILE, runOrderParameters.getRunOrderFile() );
             properties.setProperty( RUN_STATISTICS_FILE, runOrderParameters.getRunStatisticsFile() );
         }
 

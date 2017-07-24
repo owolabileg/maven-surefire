@@ -258,7 +258,7 @@ public class SurefirePlugin
     /**
      * Defines the order the tests will be run in. Supported values are {@code alphabetical},
      * {@code reversealphabetical}, {@code random}, {@code hourly} (alphabetical on even hours, reverse alphabetical
-     * on odd hours), {@code failedfirst}, {@code balanced} and {@code filesystem}.
+     * on odd hours), {@code failedfirst}, {@code balanced}, {@code filesystem} and {@code inputfile}.
      * <br>
      * <br>
      * Odd/Even for hourly is determined at the time the of scanning the classpath, meaning it could change during a
@@ -272,6 +272,9 @@ public class SurefirePlugin
      * overall execution time. Initially a statistics file is created and every next test run will reorder classes.
      * <br>
      * <br>
+     * Input file will run tests in the order contained in a user-provided file which must exist on disk.
+     * <br>
+     * <br>
      * Note that the statistics are stored in a file named <b>.surefire-XXXXXXXXX</b> beside <i>pom.xml</i> and
      * should not be checked into version control. The "XXXXX" is the SHA1 checksum of the entire surefire
      * configuration, so different configurations will have different statistics files, meaning if you change any
@@ -281,6 +284,13 @@ public class SurefirePlugin
      */
     @Parameter( property = "surefire.runOrder", defaultValue = "filesystem" )
     private String runOrder;
+
+    /**
+     * A file containing the order in which tests should be run. Used when {@code surefire.runOrder} is set to
+     * {@code inputfile}, and ignored otherwise.
+     */
+    @Parameter( property = "surefire.runOrderFile" )
+    private File runOrderFile;
 
     /**
      * A file containing include patterns. Blank lines, or lines starting with # are ignored. If {@code includes} are
@@ -666,6 +676,19 @@ public class SurefirePlugin
     public void setRunOrder( String runOrder )
     {
         this.runOrder = runOrder;
+    }
+
+    @Override
+    public File getRunOrderFile()
+    {
+        return runOrderFile;
+    }
+
+    @Override
+    @SuppressWarnings( "UnusedDeclaration" )
+    public void setRunOrderFile( File runOrderFile )
+    {
+        this.runOrderFile = runOrderFile;
     }
 
     @Override

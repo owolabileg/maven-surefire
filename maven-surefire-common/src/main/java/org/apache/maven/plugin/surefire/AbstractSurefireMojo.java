@@ -750,6 +750,10 @@ public abstract class AbstractSurefireMojo
 
     public abstract void setRunOrder( String runOrder );
 
+    public abstract File getRunOrderFile();
+
+    public abstract void setRunOrderFile( File runOrderFile );
+
     protected abstract void handleSummary( RunResult summary, Exception firstForkException )
         throws MojoExecutionException, MojoFailureException;
 
@@ -1062,8 +1066,9 @@ public abstract class AbstractSurefireMojo
         SurefireProperties effectiveProperties = setupProperties();
         ClassLoaderConfiguration classLoaderConfiguration = getClassLoaderConfiguration();
         provider.addProviderProperties();
+        validateRunOrder( getRunOrder(), getRunOrderFile() );
         RunOrderParameters runOrderParameters =
-            new RunOrderParameters( getRunOrder(), getStatisticsFile( getConfigChecksum() ) );
+            new RunOrderParameters( getRunOrder(), getStatisticsFile( getConfigChecksum() ), getRunOrderFile() );
 
         if ( isNotForking() )
         {
@@ -1104,6 +1109,24 @@ public abstract class AbstractSurefireMojo
             {
                 System.setProperties( originalSystemProperties );
                 cleanupForkConfiguration( forkConfiguration );
+            }
+        }
+    }
+
+    /**
+     * Ensure that the {@code runOrderFile} exists if {@code runOrder == RunOrder.INPUTFILE}
+     */
+    private void validateRunOrder( String runOrder, File runOrderFile ) throws MojoExecutionException
+    {
+        if ( RunOrder.valueOf( runOrder ).name().equalsIgnoreCase( "inputfile" ) )
+        {
+            if ( runOrderFile == null )
+            {
+                throw new MojoExecutionException( "The surefire.runOrderFile cannot be null." );
+            }
+            if ( !runOrderFile.exists() )
+            {
+                throw new MojoExecutionException( "The surefire.runOrderFile does not exist: " + runOrderFile );
             }
         }
     }
