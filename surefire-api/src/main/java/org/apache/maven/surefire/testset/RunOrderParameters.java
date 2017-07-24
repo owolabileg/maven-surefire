@@ -39,6 +39,11 @@ public class RunOrderParameters
         this.runStatisticsFile = runStatisticsFile;
     }
 
+    public RunOrderParameters( String runOrder, File runStatisticsFile )
+    {
+        this(runOrder, runStatisticsFile, null);
+    }
+
     public RunOrderParameters( String runOrder, File runStatisticsFile, File runOrderFile )
     {
         this.runOrder = runOrder == null ? RunOrder.DEFAULT : RunOrder.valueOfMulti( runOrder );
