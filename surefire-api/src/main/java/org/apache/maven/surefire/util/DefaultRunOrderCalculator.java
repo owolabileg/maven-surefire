@@ -118,7 +118,11 @@ public class DefaultRunOrderCalculator
             String test = bufferedReader.readLine();
             while ( test != null )
             {
-                Class<?> testClass = Class.forName( test );
+                Class<?> testClass = getTestClassOrNull( test );
+                if ( testClass == null )
+                {
+                    continue;
+                }
                 if ( testClasses.contains( testClass ) )
                 {
                     ordered.add( testClass );
@@ -130,11 +134,22 @@ public class DefaultRunOrderCalculator
         {
             e.printStackTrace();
         }
-        catch ( ClassNotFoundException e )
-        {
-            e.printStackTrace();
-        }
         return ordered;
+    }
+
+    private Class<?> getTestClassOrNull( String test )
+    {
+        Class testClass = null;
+        try
+        {
+            testClass = Class.forName( test );
+        } catch ( ClassNotFoundException e )
+        {
+            // TODO: use a logger here.
+            System.out.println( test + "was not found in classpath." );
+            // e.printStackTrace();
+        }
+        return testClass;
     }
 
 
