@@ -118,10 +118,10 @@ public class DefaultRunOrderCalculator
             String test = bufferedReader.readLine();
             while ( test != null )
             {
-                Class<?> testClass = Class.forName(test);
-                if ( testClasses.contains(testClass) )
+                Class<?> testClass = Class.forName( test );
+                if ( testClasses.contains( testClass ) )
                 {
-                    ordered.add(testClass);
+                    ordered.add( testClass );
                 }
                 test = bufferedReader.readLine();
             }
