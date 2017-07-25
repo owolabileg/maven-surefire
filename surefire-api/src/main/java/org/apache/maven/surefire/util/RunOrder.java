@@ -110,8 +110,8 @@ public class RunOrder
 
     private static RunOrder[] values()
     {
-        return new RunOrder[]{ALPHABETICAL, FILESYSTEM, HOURLY, RANDOM,
-                REVERSE_ALPHABETICAL, BALANCED, FAILEDFIRST, INPUTFILE};
+        return new RunOrder[]{ ALPHABETICAL, FILESYSTEM, HOURLY, RANDOM,
+                REVERSE_ALPHABETICAL, BALANCED, FAILEDFIRST, INPUTFILE };
     }
 
 
