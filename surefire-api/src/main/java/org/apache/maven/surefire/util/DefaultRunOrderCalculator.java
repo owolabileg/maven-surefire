@@ -31,8 +31,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Applies the final runorder of the tests
@@ -100,64 +103,34 @@ public class DefaultRunOrderCalculator
         }
         else if ( RunOrder.INPUTFILE.equals( runOrder ) )
         {
-            List<Class<?>> prioritized = readOrderFromFile( testClasses );
-            testClasses.clear();
-            testClasses.addAll( prioritized );
+            List<String> lines = null;
+            try
+            {
+                FileReader fileReader = new FileReader( runOrderParameters.getRunOrderFile() );
+                BufferedReader bufferedReader = new BufferedReader( fileReader );
+                String line = bufferedReader.readLine();
+                while ( line != null )
+                {
+                    lines.add( line );
+                }
+            }
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+            Map<String, Integer> prioritized = new HashMap<String, Integer>();
+            Iterator<String> it = lines.iterator();
+            for ( int i = 0; it.hasNext(); i++ )
+            {
+                prioritized.put( it.next(), i );
+            }
+            Collections.sort( testClasses, getFromFileComparator( prioritized ) );
         }
         else if ( sortOrder != null )
         {
             Collections.sort( testClasses, sortOrder );
         }
     }
-
-    private List<Class<?>> readOrderFromFile( List<Class<?>> testClasses )
-    {
-        List<Class<?>> ordered = new ArrayList<Class<?>>();
-        try
-        {
-            FileReader fileReader = new FileReader( runOrderParameters.getRunOrderFile() );
-            BufferedReader bufferedReader = new BufferedReader( fileReader );
-            String test = bufferedReader.readLine();
-            while ( test != null )
-            {
-                Class<?> testClass = getTestClassOrNull( test );
-                test = bufferedReader.readLine();
-                if ( testClass == null )
-                {
-                    continue;
-                }
-                if ( testClasses.contains( testClass ) )
-                {
-                    ordered.add( testClass );
-                }
-            }
-        }
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-        }
-        return ordered;
-    }
-
-    private Class<?> getTestClassOrNull( String test )
-    {
-        Class testClass = null;
-        try
-        {
-            testClass = Class.forName( test );
-        }
-        catch ( ClassNotFoundException e )
-        {
-            logger.debug( "\"" + test + "\" was not found in classpath." );
-        }
-        catch ( NoClassDefFoundError e )
-        {
-            // TODO: should we be catching this? seems hacky!!
-            logger.debug( "\"" + test + "\" has dependencies that are not in runtime classpath." );
-        }
-        return testClass;
-    }
-
 
     private Comparator<Class> getSortOrderComparator( RunOrder runOrder )
     {
@@ -178,6 +151,35 @@ public class DefaultRunOrderCalculator
         {
             return null;
         }
+    }
+
+    private Comparator<Class> getFromFileComparator( final Map<String, Integer> prioritized )
+    {
+        return new Comparator<Class>()
+        {
+            @Override
+            public int compare( Class o1, Class o2 )
+            {
+                Integer i1 = prioritized.get( o1.getName() );
+                Integer i2 = prioritized.get( o2.getName() );
+                if ( i1 == null )
+                {
+                    if ( i2 == null )
+                    {
+                        return 0;
+                    }
+                    return -1;
+                }
+                else if ( i2 == null )
+                {
+                    return 1;
+                }
+                else
+                {
+                    return i1 - i2;
+                }
+            }
+        };
     }
 
     private Comparator<Class> getReverseAlphabeticalComparator()
