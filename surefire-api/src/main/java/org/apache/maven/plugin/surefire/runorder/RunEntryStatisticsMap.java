@@ -90,7 +90,7 @@ public final class RunEntryStatisticsMap
     static RunEntryStatisticsMap fromReader( Reader fileReader )
         throws IOException
     {
-        List<String> test = new ArrayList<String>();
+        List<String> testNamesFileOrder = new ArrayList<String>();
         Map<String, RunEntryStatistics> result = new HashMap<String, RunEntryStatistics>();
         BufferedReader bufferedReader = new BufferedReader( fileReader );
         String line = bufferedReader.readLine();
@@ -100,14 +100,19 @@ public final class RunEntryStatisticsMap
             {
                 final RunEntryStatistics stats = fromString( line );
                 result.put( stats.getTestName(), stats );
-                test.add( stats.getTestName() );
+                testNamesFileOrder.add( stats.getTestName() );
             }
             line = bufferedReader.readLine();
         }
-        return new RunEntryStatisticsMap( result, test );
+        return new RunEntryStatisticsMap( result, testNamesFileOrder );
     }
 
-    public void serialize( File file )
+    public void serialize( File file ) throws FileNotFoundException
+    {
+        serialize( file, new ArrayList<String>() );
+    }
+
+    public void serialize( File file, List<String> testNamesFileOrder )
         throws FileNotFoundException
     {
         FileOutputStream fos = new FileOutputStream( file );
@@ -293,5 +298,10 @@ public final class RunEntryStatisticsMap
     {
         Matcher m = PARENS.matcher( displayName );
         return m.find() ? m.group( 1 ) : displayName;
+    }
+
+    public List<String> getTestNamesFileOrder()
+    {
+        return testNamesFileOrder;
     }
 }
