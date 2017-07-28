@@ -115,7 +115,7 @@ public final class RunEntryStatisticsMap
         try
         {
             List<RunEntryStatistics> items = new ArrayList<RunEntryStatistics>( runEntryStatistics.values() );
-            sort( items, new RunCountComparator(testNamesFileOrder) );
+            sort( items, new RunCountComparator( testNamesFileOrder ) );
             for ( RunEntryStatistics item : items )
             {
                 printWriter.println( item.toString() );
