@@ -32,6 +32,8 @@ public class Priority
 
     int minSuccessRate = Integer.MAX_VALUE;
 
+    int minPosition = Integer.MAX_VALUE;
+
     public Priority( String className )
     {
         this.className = className;
@@ -48,6 +50,7 @@ public class Priority
         Priority priority1 = new Priority( className );
         priority1.setPriority( 0 );
         priority1.minSuccessRate = 0;
+        priority1.minPosition = 0;
         return priority1;
     }
 
@@ -55,8 +58,15 @@ public class Priority
     {
         totalRuntime += itemStat.getRunTime();
         minSuccessRate = Math.min( minSuccessRate, itemStat.getSuccessfulBuilds() );
+        minPosition = 0;
     }
 
+    public void addItem( RunEntryStatistics itemStat, int position )
+    {
+        totalRuntime += itemStat.getRunTime();
+        minSuccessRate = Math.min( minSuccessRate, itemStat.getSuccessfulBuilds() );
+        minPosition = Math.min( minPosition, position );
+    }
 
     public int getTotalRuntime()
     {
@@ -81,5 +91,10 @@ public class Priority
     public void setPriority( int priority )
     {
         this.priority = priority;
+    }
+
+    public int getMinPosition()
+    {
+        return minPosition;
     }
 }
