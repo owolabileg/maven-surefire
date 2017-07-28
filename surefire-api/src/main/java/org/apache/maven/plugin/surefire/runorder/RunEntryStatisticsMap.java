@@ -50,14 +50,18 @@ public final class RunEntryStatisticsMap
 {
     private final Map<String, RunEntryStatistics> runEntryStatistics;
 
-    public RunEntryStatisticsMap( Map<String, RunEntryStatistics> runEntryStatistics )
+    private final List<String> positionList;
+
+    public RunEntryStatisticsMap( Map<String, RunEntryStatistics> runEntryStatistics, List<String> positionList)
     {
         this.runEntryStatistics = new ConcurrentHashMap<String, RunEntryStatistics>( runEntryStatistics );
+        this.positionList = positionList;
     }
 
     public RunEntryStatisticsMap()
     {
         runEntryStatistics = new ConcurrentHashMap<String, RunEntryStatistics>();
+        positionList = new ArrayList<String>();
     }
 
     public static RunEntryStatisticsMap fromFile( File file )
@@ -86,6 +90,7 @@ public final class RunEntryStatisticsMap
     static RunEntryStatisticsMap fromReader( Reader fileReader )
         throws IOException
     {
+        List<String> positionList = new ArrayList<String>();
         Map<String, RunEntryStatistics> result = new HashMap<String, RunEntryStatistics>();
         BufferedReader bufferedReader = new BufferedReader( fileReader );
         String line = bufferedReader.readLine();
@@ -95,10 +100,11 @@ public final class RunEntryStatisticsMap
             {
                 final RunEntryStatistics stats = fromString( line );
                 result.put( stats.getTestName(), stats );
+                positionList.add( stats.getTestName() );
             }
             line = bufferedReader.readLine();
         }
-        return new RunEntryStatisticsMap( result );
+        return new RunEntryStatisticsMap( result, positionList );
     }
 
     public void serialize( File file )
@@ -109,6 +115,7 @@ public final class RunEntryStatisticsMap
         try
         {
             List<RunEntryStatistics> items = new ArrayList<RunEntryStatistics>( runEntryStatistics.values() );
+            sort( items, new FilePositionComparator(new ArrayList<String>(positionList)) );
             sort( items, new RunCountComparator() );
             for ( RunEntryStatistics item : items )
             {
@@ -147,6 +154,38 @@ public final class RunEntryStatisticsMap
         runEntryStatistics.put( item.getTestName(), item );
     }
 
+    static final class FilePositionComparator
+            implements Comparator<RunEntryStatistics>
+    {
+        private List<String> positionList;
+        public FilePositionComparator(ArrayList<String> positionList) {
+            this.positionList = positionList;
+        }
+
+        @Override
+        public int compare( RunEntryStatistics o, RunEntryStatistics o1 )
+        {
+            String t1 = o.getTestName();
+            String t2 = o.getTestName();
+            if ( !positionList.contains( t1 ) )
+            {
+                if ( !positionList.contains( t2 ) )
+                {
+                    return 0;
+                }
+                return -1;
+            }
+            else if ( !positionList.contains( t2 ) )
+            {
+                return 1;
+            }
+            else
+            {
+                return positionList.indexOf( t1 ) - positionList.indexOf( t2 );
+            }
+        }
+    }
+
     static final class RunCountComparator
         implements Comparator<RunEntryStatistics>
     {
@@ -176,8 +215,13 @@ public final class RunEntryStatisticsMap
         return transformToClasses( prioritizedTests );
     }
 
-    private List<PrioritizedTest> getPrioritizedTests( List<Class<?>> testsToRun,
-                                                       Comparator<Priority> priorityComparator )
+    public List<Class<?>> getPrioritizedTestsByFailureFirstAndFileOrder( List<Class<?>> testsToRun ) {
+        List<PrioritizedTest> prioritizedTests = getPrioritizedTests( testsToRun, new LeastFailureComparator() );
+        return transformToClasses(prioritizedTests);
+    }
+
+    private List<PrioritizedTest> getPrioritizedTests(List<Class<?>> testsToRun,
+                                                      Comparator<Priority> priorityComparator)
     {
         Map classPriorities = getPriorities( priorityComparator );
 
@@ -206,7 +250,7 @@ public final class RunEntryStatisticsMap
         return result;
     }
 
-    private Map getPriorities( Comparator<Priority> priorityComparator )
+    private Map getPriorities(Comparator<Priority> priorityComparator)
     {
         Map<String, Priority> priorities = new HashMap<String, Priority>();
         for ( Object o : runEntryStatistics.keySet() )
@@ -221,7 +265,7 @@ public final class RunEntryStatisticsMap
             }
 
             RunEntryStatistics itemStat = runEntryStatistics.get( testNames );
-            priority.addItem( itemStat );
+            priority.addItem( itemStat, positionList.indexOf( testNames ) );
         }
 
         List<Priority> items = new ArrayList<Priority>( priorities.values() );
@@ -259,10 +303,15 @@ public final class RunEntryStatisticsMap
     static final class LeastFailureComparator
         implements Comparator<Priority>
     {
+
         @Override
         public int compare( Priority o, Priority o1 )
         {
-            return o.getMinSuccessRate() - o1.getMinSuccessRate();
+            int val = o.getMinSuccessRate() - o1.getMinSuccessRate();
+            if (val == 0) {
+                val = o.getMinPosition() - o1.getMinPosition();
+            }
+            return val;
         }
     }
 

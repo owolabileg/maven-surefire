@@ -29,8 +29,6 @@ public class RunOrderParameters
 {
     private final RunOrder[] runOrder;
 
-    private File runOrderFile;
-
     private File runStatisticsFile;
 
     public RunOrderParameters( RunOrder[] runOrder, File runStatisticsFile )
@@ -41,14 +39,8 @@ public class RunOrderParameters
 
     public RunOrderParameters( String runOrder, File runStatisticsFile )
     {
-        this( runOrder, runStatisticsFile, null );
-    }
-
-    public RunOrderParameters( String runOrder, File runStatisticsFile, File runOrderFile )
-    {
         this.runOrder = runOrder == null ? RunOrder.DEFAULT : RunOrder.valueOfMulti( runOrder );
         this.runStatisticsFile = runStatisticsFile;
-        this.runOrderFile = runOrderFile;
     }
 
     public static RunOrderParameters alphabetical()
@@ -59,11 +51,6 @@ public class RunOrderParameters
     public RunOrder[] getRunOrder()
     {
         return runOrder;
-    }
-
-    public File getRunOrderFile()
-    {
-        return runOrderFile;
     }
 
     public File getRunStatisticsFile()

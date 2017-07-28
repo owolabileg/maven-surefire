@@ -53,7 +53,6 @@ public class DefaultRunOrderCalculator
 
     private final int threadCount;
 
-    private final ConsoleLogger logger;
 
     public DefaultRunOrderCalculator( RunOrderParameters runOrderParameters, int threadCount )
     {
@@ -61,7 +60,6 @@ public class DefaultRunOrderCalculator
         this.threadCount = threadCount;
         this.runOrder = runOrderParameters.getRunOrder();
         this.sortOrder = this.runOrder.length > 0 ? getSortOrderComparator( this.runOrder[0] ) : null;
-        logger = getConsoleLogger();
     }
 
     @Override
@@ -103,28 +101,10 @@ public class DefaultRunOrderCalculator
         }
         else if ( RunOrder.INPUTFILE.equals( runOrder ) )
         {
-            List<String> lines = null;
-            try
-            {
-                FileReader fileReader = new FileReader( runOrderParameters.getRunOrderFile() );
-                BufferedReader bufferedReader = new BufferedReader( fileReader );
-                String line = bufferedReader.readLine();
-                while ( line != null )
-                {
-                    lines.add( line );
-                }
-            }
-            catch ( IOException e )
-            {
-                e.printStackTrace();
-            }
-            Map<String, Integer> prioritized = new HashMap<String, Integer>();
-            Iterator<String> it = lines.iterator();
-            for ( int i = 0; it.hasNext(); i++ )
-            {
-                prioritized.put( it.next(), i );
-            }
-            Collections.sort( testClasses, getFromFileComparator( prioritized ) );
+            RunEntryStatisticsMap stat = RunEntryStatisticsMap.fromFile( runOrderParameters.getRunStatisticsFile() );
+            List<Class<?>> prioritized = stat.getPrioritizedTestsByFailureFirstAndFileOrder( testClasses );
+            testClasses.clear();
+            testClasses.addAll( prioritized );
         }
         else if ( sortOrder != null )
         {
@@ -204,11 +184,5 @@ public class DefaultRunOrderCalculator
                 return o1.getName().compareTo( o2.getName() );
             }
         };
-    }
-
-    public ConsoleLogger getConsoleLogger()
-    {
-        // TODO: Use a logger that does not just print to /dev/null
-        return new NullConsoleLogger();
     }
 }

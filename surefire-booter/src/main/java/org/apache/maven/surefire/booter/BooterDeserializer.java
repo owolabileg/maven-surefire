@@ -88,10 +88,7 @@ public class BooterDeserializer
                                             properties.getBooleanProperty( FAILIFNOTESTS ), runOrder );
 
         RunOrderParameters runOrderParameters
-                = new RunOrderParameters( runOrder,
-                    runStatisticsFile == null ? null : new File( runStatisticsFile ),
-                    runOrderFile == null ? null : new File( runOrderFile )
-                    );
+                = new RunOrderParameters( runOrder, runStatisticsFile == null ? null : new File( runStatisticsFile ) );
 
         TestArtifactInfo testNg = new TestArtifactInfo( testNgVersion, testArtifactClassifier );
         TestRequest testSuiteDefinition =
