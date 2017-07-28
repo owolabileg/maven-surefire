@@ -52,7 +52,7 @@ public class StatisticsReporter
     {
         try
         {
-            newResults.serialize( dataFile );
+            newResults.serialize( dataFile, existing.getTestNamesFileOrder() );
         }
         catch ( FileNotFoundException e )
         {
