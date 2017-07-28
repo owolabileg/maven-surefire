@@ -1609,7 +1609,8 @@ public abstract class AbstractSurefireMojo
 
     public File getStatisticsFile( String configurationHash )
     {
-        return new File( getBasedir(), ".surefire-" + configurationHash );
+        String runOrderFile = session.getUserProperties().getProperty("surefire.runOrderFile");
+        return new File( runOrderFile == null ? ".surefire-" + configurationHash : runOrderFile );
     }
 
     StartupConfiguration createStartupConfiguration( ProviderInfo provider,
