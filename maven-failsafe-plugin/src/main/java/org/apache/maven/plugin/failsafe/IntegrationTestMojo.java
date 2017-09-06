@@ -311,6 +311,14 @@ public class IntegrationTestMojo
     private String runOrder;
 
     /**
+     * A file containing the order in which tests should be run. Used when {@code surefire.runOrder} is set to
+     * {@code inputfile}, and ignored otherwise.
+     */
+    @Parameter( property = "failsafe.runOrderFile" )
+    private File runOrderFile;
+
+
+    /**
      * A file containing include patterns, each in a next line. Blank lines, or lines starting with # are ignored.
      * If {@code includes} are also specified, these patterns are appended. Example with path, simple and regex
      * includes:
@@ -795,6 +803,19 @@ public class IntegrationTestMojo
     public void setRunOrder( String runOrder )
     {
         this.runOrder = runOrder;
+    }
+
+    @Override
+    public File getRunOrderFile()
+    {
+        return runOrderFile;
+    }
+
+    @Override
+    @SuppressWarnings( "UnusedDeclaration" )
+    public void setRunOrderFile( File runOrderFile )
+    {
+        this.runOrderFile = runOrderFile;
     }
 
     @Override

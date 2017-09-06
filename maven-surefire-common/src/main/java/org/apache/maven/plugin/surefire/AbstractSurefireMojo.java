@@ -753,6 +753,10 @@ public abstract class AbstractSurefireMojo
 
     public abstract void setRunOrder( String runOrder );
 
+    public abstract File getRunOrderFile();
+
+    public abstract void setRunOrderFile( File runOrderFile );
+
     protected abstract void handleSummary( RunResult summary, Exception firstForkException )
         throws MojoExecutionException, MojoFailureException;
 
@@ -1065,8 +1069,10 @@ public abstract class AbstractSurefireMojo
         SurefireProperties effectiveProperties = setupProperties();
         ClassLoaderConfiguration classLoaderConfiguration = getClassLoaderConfiguration();
         provider.addProviderProperties();
-        RunOrderParameters runOrderParameters =
-            new RunOrderParameters( getRunOrder(), getStatisticsFile( getConfigChecksum() ) );
+        validateRunOrder();
+        RunOrderParameters runOrderParameters = getRunOrder().equalsIgnoreCase( "inputfile" )
+                ? new RunOrderParameters( getRunOrder(), getRunOrderFile() )
+                : new RunOrderParameters( getRunOrder(), getStatisticsFile( getConfigChecksum() ) );
 
         if ( isNotForking() )
         {
@@ -1107,6 +1113,24 @@ public abstract class AbstractSurefireMojo
             {
                 System.setProperties( originalSystemProperties );
                 cleanupForkConfiguration( forkConfiguration );
+            }
+        }
+    }
+
+    /**
+     * Ensure that the {@code runOrderFile} exists if {@code runOrder == RunOrder.INPUTFILE}
+     */
+    private void validateRunOrder() throws MojoExecutionException
+    {
+        if ( RunOrder.valueOf( getRunOrder() ).name().equalsIgnoreCase( "inputfile" ) )
+        {
+            if ( getRunOrderFile() == null )
+            {
+                throw new MojoExecutionException( "The surefire.runOrderFile cannot be null." );
+            }
+            if ( !getRunOrderFile().exists() )
+            {
+                throw new MojoExecutionException( "The surefire.runOrderFile does not exist: " + getRunOrderFile() );
             }
         }
     }

@@ -19,15 +19,23 @@ package org.apache.maven.surefire.util;
  * under the License.
  */
 
+import org.apache.maven.plugin.surefire.log.api.ConsoleLogger;
+import org.apache.maven.plugin.surefire.log.api.NullConsoleLogger;
 import org.apache.maven.plugin.surefire.runorder.RunEntryStatisticsMap;
 import org.apache.maven.surefire.testset.RunOrderParameters;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Applies the final runorder of the tests
@@ -44,6 +52,7 @@ public class DefaultRunOrderCalculator
     private final RunOrderParameters runOrderParameters;
 
     private final int threadCount;
+
 
     public DefaultRunOrderCalculator( RunOrderParameters runOrderParameters, int threadCount )
     {
@@ -90,6 +99,13 @@ public class DefaultRunOrderCalculator
             testClasses.addAll( prioritized );
 
         }
+        else if ( RunOrder.INPUTFILE.equals( runOrder ) )
+        {
+            RunEntryStatisticsMap stat = RunEntryStatisticsMap.fromFile( runOrderParameters.getRunStatisticsFile() );
+            List<Class<?>> prioritized = stat.getPrioritizedTestsByFailureFirstAndFileOrder( testClasses );
+            testClasses.clear();
+            testClasses.addAll( prioritized );
+        }
         else if ( sortOrder != null )
         {
             Collections.sort( testClasses, sortOrder );
@@ -115,6 +131,35 @@ public class DefaultRunOrderCalculator
         {
             return null;
         }
+    }
+
+    private Comparator<Class> getFromFileComparator( final Map<String, Integer> prioritized )
+    {
+        return new Comparator<Class>()
+        {
+            @Override
+            public int compare( Class o1, Class o2 )
+            {
+                Integer i1 = prioritized.get( o1.getName() );
+                Integer i2 = prioritized.get( o2.getName() );
+                if ( i1 == null )
+                {
+                    if ( i2 == null )
+                    {
+                        return 0;
+                    }
+                    return -1;
+                }
+                else if ( i2 == null )
+                {
+                    return 1;
+                }
+                else
+                {
+                    return i1 - i2;
+                }
+            }
+        };
     }
 
     private Comparator<Class> getReverseAlphabeticalComparator()
